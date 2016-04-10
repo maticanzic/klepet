@@ -1,7 +1,11 @@
 function divElementEnostavniTekst(sporocilo) {
   var jeSmesko = sporocilo.indexOf('http://sandbox.lavbic.net/teaching/OIS/gradivo/') > -1;
-  if (jeSmesko) {
-    sporocilo = sporocilo.replace(/\</g, '&lt;').replace(/\>/g, '&gt;').replace('&lt;img', '<img').replace('png\' /&gt;', 'png\' />');
+  var jeVideo = sporocilo.includes('https://www.youtube.com/embed');
+
+  if (jeSmesko | jeVideo) {
+    sporocilo = sporocilo.replace(/\</g, '&lt;').replace(/\>/g, '&gt;').replace('&lt;img', '<img').replace('png\' /&gt;', 'png\' />').replace('jpg\' /&gt;', 'jpg\' />').replace('gif\' /&gt;', 'gif\' />');
+    sporocilo = sporocilo.replace(/&lt;iframe/g, '<iframe').replace(/&gt;&lt;/g, '><').replace(/iframe&gt;/g, 'iframe>');
+
     return $('<div style="font-weight: bold"></div>').html(sporocilo);
   } else {
     return $('<div style="font-weight: bold;"></div>').text(sporocilo);
@@ -23,6 +27,7 @@ function procesirajVnosUporabnika(klepetApp, socket) {
       $('#sporocila').append(divElementHtmlTekst(sistemskoSporocilo));
     }
   } else {
+    sporocilo = dodajVideo(sporocilo);
     sporocilo = filtirirajVulgarneBesede(sporocilo);
     klepetApp.posljiSporocilo(trenutniKanal, sporocilo);
     $('#sporocila').append(divElementEnostavniTekst(sporocilo));
@@ -128,6 +133,22 @@ function dodajSmeske(vhodnoBesedilo) {
     vhodnoBesedilo = vhodnoBesedilo.replace(smesko,
       "<img src='http://sandbox.lavbic.net/teaching/OIS/gradivo/" +
       preslikovalnaTabela[smesko] + "' />");
+  }
+  return vhodnoBesedilo;
+}
+
+function dodajVideo(vhodnoBesedilo) {
+  if (vhodnoBesedilo.includes("https://www.youtube.com/watch?v=" || "www.youtube.com/embed/")) {
+    vhodnoBesedilo = vhodnoBesedilo.replace(/https/, '<iframe style="width:200px; height:150px; margin-left:20px";  allowfullscreen src="https').replace(/watch[?]v=/, 'embed/');
+
+    var zacetniIndeks = vhodnoBesedilo.indexOf('<iframe style="width:200px; height:150px; margin-left:20px";  allowfullscreen src="https');
+    var koncniIndeks = vhodnoBesedilo.indexOf("embed/") + 17;
+    var ostanek = vhodnoBesedilo.substring(koncniIndeks, vhodnoBesedilo.length);
+    vhodnoBesedilo = vhodnoBesedilo.substring(0, zacetniIndeks) + vhodnoBesedilo.slice(zacetniIndeks, koncniIndeks) + '"></iframe>';
+
+    var novoBesedilo = dodajVideo(ostanek);
+    
+    vhodnoBesedilo = vhodnoBesedilo + novoBesedilo;
   }
   return vhodnoBesedilo;
 }
