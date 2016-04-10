@@ -1,7 +1,8 @@
 function divElementEnostavniTekst(sporocilo) {
   var jeSmesko = sporocilo.indexOf('http://sandbox.lavbic.net/teaching/OIS/gradivo/') > -1;
-  if (jeSmesko) {
-    sporocilo = sporocilo.replace(/\</g, '&lt;').replace(/\>/g, '&gt;').replace('&lt;img', '<img').replace('png\' /&gt;', 'png\' />');
+  var jeSlika = sporocilo.includes(("http://" | "https://") & (".jpg" | ".png" | ".gif"));
+ if (jeSmesko | jeSlika) {
+    sporocilo = sporocilo.replace(/\</g, '&lt;').replace(/\>/g, '&gt;').replace('&lt;img', '<img').replace('png\' /&gt;', 'png\' />').replace('jpg\' /&gt;', 'jpg\' />').replace('gif\' /&gt;', 'gif\' />');
     return $('<div style="font-weight: bold"></div>').html(sporocilo);
   } else {
     return $('<div style="font-weight: bold;"></div>').text(sporocilo);
@@ -23,6 +24,7 @@ function procesirajVnosUporabnika(klepetApp, socket) {
       $('#sporocila').append(divElementHtmlTekst(sistemskoSporocilo));
     }
   } else {
+    sporocilo = dodajSlike(sporocilo);
     sporocilo = filtirirajVulgarneBesede(sporocilo);
     klepetApp.posljiSporocilo(trenutniKanal, sporocilo);
     $('#sporocila').append(divElementEnostavniTekst(sporocilo));
@@ -134,5 +136,24 @@ function dodajSmeske(vhodnoBesedilo) {
       "<img src='http://sandbox.lavbic.net/teaching/OIS/gradivo/" +
       preslikovalnaTabela[smesko] + "' />");
   }
+  return vhodnoBesedilo;
+}
+
+function dodajSlike(vhodnoBesedilo) {
+  if (vhodnoBesedilo.includes(("http://" | "https://") & (".jpg" | ".png" | ".gif")) == true) {
+    var besedilo = vhodnoBesedilo.replace(/http/g," http").replace(/.jpg/g,".jpg ").replace(/.png/g,".png ").replace(/.gif/g,".gif ");
+    var deliBesedila = besedilo.split(" ");
+    var novoBesedilo = '';
+    $.each(deliBesedila, function(i, del) {
+      del = del.trim();
+      if (del.indexOf("http") >= 0) {
+        novoBesedilo += "<img style='margin-left:20px; width:200px' src='" + del + "' />";
+      }
+      else {
+        novoBesedilo += del;
+      }  
+    });
+    vhodnoBesedilo = novoBesedilo;
+  } 
   return vhodnoBesedilo;
 }
